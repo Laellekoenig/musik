@@ -2,6 +2,7 @@ import Combine
 import Foundation
 import MusicKit
 import Observation
+import OSLog
 
 /// The single owner of `ApplicationMusicPlayer.shared`. Views read the
 /// mirrored state below and call the methods; nothing else touches the player.
@@ -17,8 +18,11 @@ final class PlayerModel {
     var errorMessage: String?
 
     @ObservationIgnored private let player = ApplicationMusicPlayer.shared
+    @ObservationIgnored private let log = Logger(subsystem: "zip.barth.musik", category: "Player")
     @ObservationIgnored private var stateObserver: AnyCancellable?
     @ObservationIgnored private var queueObserver: AnyCancellable?
+    /// Bumped by every `start`, so a superseded start can tell it's stale.
+    @ObservationIgnored private var startCount = 0
 
     init() {
         stateObserver = observe(player.state.objectWillChange)
@@ -40,6 +44,11 @@ final class PlayerModel {
         case nil: nil
         @unknown default: nil
         }
+    }
+
+    /// The current entry's song, if it is one (not a music video).
+    var currentSong: Song? {
+        if case .song(let song) = currentEntry?.item { song } else { nil }
     }
 
     /// Not observable (the player doesn't publish it); poll it while playing.
@@ -78,19 +87,18 @@ final class PlayerModel {
         start(ApplicationMusicPlayer.Queue(for: items, startingAt: first), shuffle: nil)
     }
 
+    /// Queues a playlist's songs starting at `entry`, keeping the shuffle mode.
+    /// For library playlists, both `Queue(playlist:startingAt:)` and queueing
+    /// the entries themselves fail to prepare (MPMusicPlayerControllerErrorDomain
+    /// 6), so this queues each entry's underlying song or video instead.
+    func play(_ entries: [Playlist.Entry], startingAt entry: Playlist.Entry) {
+        guard let first = entry.item else { return }
+        play(entries.compactMap(\.item), startingAt: first)
+    }
+
     /// Plays a single item (album, playlist, station, song) from the top, in order.
     func play(_ item: some PlayableMusicItem) {
         start(ApplicationMusicPlayer.Queue(for: [item]), shuffle: .off)
-    }
-
-    /// Plays an album starting at one of its tracks, keeping the shuffle mode.
-    func play(_ album: Album, startingAt track: Track) {
-        start(ApplicationMusicPlayer.Queue(album: album, startingAt: track), shuffle: nil)
-    }
-
-    /// Plays a playlist starting at one of its entries, keeping the shuffle mode.
-    func play(_ playlist: Playlist, startingAt entry: Playlist.Entry) {
-        start(ApplicationMusicPlayer.Queue(playlist: playlist, startingAt: entry), shuffle: nil)
     }
 
     /// Plays an album, playlist, etc. in shuffled order.
@@ -135,12 +143,14 @@ final class PlayerModel {
     }
 
     func seek(to time: TimeInterval) {
+        log.info("seek to \(time, privacy: .public)")
         player.playbackTime = max(0, time)
     }
 
     // MARK: - Modes
 
     func setShuffleMode(_ mode: MusicPlayer.ShuffleMode) {
+        log.info("shuffle mode \(String(describing: mode), privacy: .public)")
         player.state.shuffleMode = mode
         sync()
     }
@@ -179,11 +189,25 @@ final class PlayerModel {
     }
 
     private func start(_ queue: ApplicationMusicPlayer.Queue, shuffle: MusicPlayer.ShuffleMode?) {
+        startCount += 1
+        let start = startCount
+        log.info("start #\(start, privacy: .public)")
+
         player.queue = queue
         // Setting the queue may replace the observed queue object.
         observeQueue()
         if let shuffle { setShuffleMode(shuffle) }
-        perform { try await self.player.play() }
+
+        Task {
+            do {
+                try await player.play()
+            } catch {
+                log.error("start #\(start, privacy: .public) failed: \(String(describing: error), privacy: .public)")
+                // A start that a newer one replaced fails too; that's expected.
+                if start == startCount { errorMessage = error.localizedDescription }
+            }
+            sync()
+        }
     }
 
     private func perform(alertOnError: Bool = true, _ operation: @escaping () async throws -> Void) {
@@ -191,6 +215,7 @@ final class PlayerModel {
             do {
                 try await operation()
             } catch {
+                log.error("player call failed: \(String(describing: error), privacy: .public)")
                 if alertOnError { errorMessage = error.localizedDescription }
             }
             sync()
@@ -212,6 +237,9 @@ final class PlayerModel {
     private func sync() {
         let state = player.state
         update(\.currentEntry, to: player.queue.currentEntry)
+        if state.playbackStatus != playbackStatus {
+            log.info("status \(String(describing: state.playbackStatus), privacy: .public) at \(self.player.playbackTime, privacy: .public)")
+        }
         update(\.playbackStatus, to: state.playbackStatus)
         update(\.shuffleMode, to: state.shuffleMode ?? .off)
         update(\.repeatMode, to: state.repeatMode ?? .none)

@@ -35,7 +35,7 @@ struct PlaylistDetailView: View {
             case .loaded(let detailed):
                 ForEach(detailed.entries) { entry in
                     Button {
-                        player.play(detailed.playlist, startingAt: entry)
+                        player.play(detailed.entries, startingAt: entry)
                     } label: {
                         TrackRow(entry, isCurrent: player.isCurrent(entry))
                     }

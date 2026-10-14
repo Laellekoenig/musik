@@ -8,7 +8,7 @@ A native macOS Apple Music client built with SwiftUI and MusicKit.
 
 ## Features
 
-- **Recently Played**: the albums, playlists and stations you played lately, plus your recent songs.
+- **Recently Played**: your recent songs, updated live as songs play in the app.
 - **Search** the Apple Music catalog for songs, albums and playlists.
 - **Library**: your songs (filterable table), albums and artists, with refresh (⌘R).
 - **Playlists** from your library in the sidebar, each with its full track list.

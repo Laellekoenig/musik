@@ -55,10 +55,6 @@ extension AlbumCard {
     init(_ playlist: Playlist, size: CGFloat = AlbumCard.defaultSize) {
         self.init(artwork: playlist.artwork, title: playlist.name, subtitle: playlist.curatorName, size: size)
     }
-
-    init(_ item: RecentlyPlayedMusicItem, size: CGFloat = AlbumCard.defaultSize) {
-        self.init(artwork: item.artwork, title: item.title, subtitle: item.subtitle, size: size)
-    }
 }
 
 #Preview {

@@ -23,9 +23,10 @@ struct AlbumDetailView: View {
                 ContentUnavailableView("Couldn't Load Tracks", systemImage: "exclamationmark.triangle", description: Text(message))
                     .listRowSeparator(.hidden)
             case .loaded(let album):
-                ForEach(album.tracks ?? []) { track in
+                let tracks = album.tracks ?? []
+                ForEach(tracks) { track in
                     Button {
-                        player.play(album, startingAt: track)
+                        player.play(tracks, startingAt: track)
                     } label: {
                         TrackRow(track, isCurrent: player.isCurrent(track))
                     }
