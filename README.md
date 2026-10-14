@@ -8,11 +8,10 @@ A native macOS Apple Music client built with SwiftUI and MusicKit.
 
 ## Features
 
-- **Recently Played**: your recent songs, updated live as songs play in the app.
-- **Search** the Apple Music catalog for songs, albums and playlists.
-- **Library**: your songs (filterable table), albums and artists, with refresh (⌘R).
-- **Playlists** from your library in the sidebar, each with its full track list.
-- **Playback**: a now playing bar and a Controls menu with play/pause (⌘P), next/previous (⌘→/⌘←), shuffle and repeat.
+One page: the current song's artwork with playback controls (shuffle, previous, play/pause, next, repeat, scrubber), and a song search below it.
+
+- **⌘N** focuses the search; **↑/↓** pick a result, **Return** plays it (the results become the queue), **Esc** closes the search.
+- The Controls menu has play/pause (⌘P), next/previous (⌘→/⌘←), shuffle and repeat.
 
 ## Setup
 
@@ -27,9 +26,10 @@ Playback needs an active Apple Music subscription on the Apple Account that's si
 
 | Folder | What goes there |
 | --- | --- |
-| `App/` | App entry point, authorization gate, root layout, sidebar (`SidebarItem`) and the navigation destinations shared by every screen (`MusicDestinations`). |
-| `Player/` | `PlayerModel`, the only code that talks to `ApplicationMusicPlayer`, plus the now playing bar and the Controls menu. |
-| `Features/<Name>/` | One folder per sidebar section (`RecentlyPlayed`, `Search`, `Library`, `Playlists`) with its screens and loaders. |
-| `Views/Components/` | Reusable views: track rows, artwork, album cards and grids, shelves, collection headers, load states, the refresh button. |
+| `App/` | App entry point, authorization gate and menu commands. |
+| `Home/` | `HomeView`, the app's page. |
+| `Player/` | `PlayerModel`, the only code that talks to `ApplicationMusicPlayer`, plus the now playing view and the Controls menu. |
+| `Search/` | The song search field and results. |
+| `Views/Components/` | Small reusable views: artwork, track rows. |
 
-Conventions: views start playback only through `PlayerModel`; anything pushable is navigated to with `NavigationLink(value:)` and registered once in `musicDestinations()`; async loads use `LoadState` / `LoadStateView`, and long library lists use `LibraryItems`.
+Views start playback only through `PlayerModel`.

@@ -90,27 +90,6 @@ extension TrackRow {
             isCurrent: isCurrent
         )
     }
-
-    /// Album tracks default to showing track numbers instead of artwork.
-    init(_ track: Track, leading: Leading? = nil, isCurrent: Bool = false) {
-        self.init(
-            title: track.title,
-            subtitle: track.artistName,
-            duration: track.duration,
-            leading: leading ?? .trackNumber(track.trackNumber),
-            isCurrent: isCurrent
-        )
-    }
-
-    init(_ entry: Playlist.Entry, leading: Leading? = nil, isCurrent: Bool = false) {
-        self.init(
-            title: entry.title,
-            subtitle: entry.artistName,
-            duration: entry.duration,
-            leading: leading ?? .artwork(entry.artwork),
-            isCurrent: isCurrent
-        )
-    }
 }
 
 #Preview {

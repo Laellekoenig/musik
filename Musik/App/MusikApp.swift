@@ -8,10 +8,12 @@ struct MusikApp: App {
         WindowGroup {
             ContentView()
                 .environment(player)
-                .frame(minWidth: 760, minHeight: 500)
+                .frame(minWidth: 380, minHeight: 600)
         }
-        .defaultSize(width: 1000, height: 700)
+        .defaultSize(width: 460, height: 780)
+        .windowStyle(.hiddenTitleBar)
         .commands {
+            SearchCommands()
             PlaybackCommands(player: player)
         }
     }

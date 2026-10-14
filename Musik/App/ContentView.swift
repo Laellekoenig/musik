@@ -7,7 +7,7 @@ struct ContentView: View {
 
     var body: some View {
         if status == .authorized {
-            RootView()
+            HomeView()
         } else {
             LoginView(status: $status)
         }

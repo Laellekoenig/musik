@@ -59,13 +59,6 @@ final class PlayerModel {
         currentEntry?.item?.id == item.id
     }
 
-    /// Playlist entries have their own IDs; the queue holds the entry's song or
-    /// video, so match on that (and on the entry ID in case they coincide).
-    func isCurrent(_ entry: Playlist.Entry) -> Bool {
-        guard let id = currentEntry?.item?.id else { return false }
-        return id == entry.item?.id || id == entry.id
-    }
-
     // MARK: - Starting playback
     //
     // Like Music.app: playing something from the top plays it in order
@@ -85,15 +78,6 @@ final class PlayerModel {
         let items = Self.queueWindow(Array(items), around: first)
         guard !items.isEmpty else { return }
         start(ApplicationMusicPlayer.Queue(for: items, startingAt: first), shuffle: nil)
-    }
-
-    /// Queues a playlist's songs starting at `entry`, keeping the shuffle mode.
-    /// For library playlists, both `Queue(playlist:startingAt:)` and queueing
-    /// the entries themselves fail to prepare (MPMusicPlayerControllerErrorDomain
-    /// 6), so this queues each entry's underlying song or video instead.
-    func play(_ entries: [Playlist.Entry], startingAt entry: Playlist.Entry) {
-        guard let first = entry.item else { return }
-        play(entries.compactMap(\.item), startingAt: first)
     }
 
     /// Plays a single item (album, playlist, station, song) from the top, in order.

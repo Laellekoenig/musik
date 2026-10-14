@@ -1,52 +1,43 @@
 import MusicKit
 import SwiftUI
 
-/// The window-wide transport bar. Shows a disabled empty state when nothing is queued.
-struct NowPlayingBar: View {
+/// The current song's artwork and title, with the progress bar and transport
+/// controls below it.
+struct NowPlayingView: View {
+    @Environment(PlayerModel.self) private var player
+    var artworkSize: CGFloat = 280
+
+    var body: some View {
+        VStack(spacing: 16) {
+            ArtworkView(artwork: player.currentEntry?.artwork, size: artworkSize, cornerRadius: artworkSize / 24)
+                .shadow(color: .black.opacity(0.3), radius: 16, y: 8)
+
+            VStack(spacing: 2) {
+                Text(player.currentEntry?.title ?? "Not Playing")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(player.hasQueue ? .primary : .secondary)
+                Text(player.currentEntry?.subtitle ?? " ")
+                    .foregroundStyle(.secondary)
+            }
+            .lineLimit(1)
+            .multilineTextAlignment(.center)
+
+            VStack(spacing: 8) {
+                PlaybackProgressView()
+                PlaybackControls()
+            }
+            .frame(maxWidth: 360)
+            .disabled(!player.hasQueue)
+        }
+    }
+}
+
+/// Shuffle, previous, play/pause, next and repeat.
+private struct PlaybackControls: View {
     @Environment(PlayerModel.self) private var player
 
     var body: some View {
-        HStack(spacing: 16) {
-            nowPlayingInfo
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            VStack(spacing: 4) {
-                controls
-                PlaybackProgressView()
-            }
-            .frame(minWidth: 280, idealWidth: 420, maxWidth: 480)
-
-            // Balances the info column so the controls stay centered.
-            Color.clear
-                .frame(maxWidth: .infinity, maxHeight: 0)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .disabled(!player.hasQueue)
-        .background(.bar)
-        .overlay(alignment: .top) { Divider() }
-    }
-
-    private var nowPlayingInfo: some View {
-        HStack(spacing: 10) {
-            ArtworkView(artwork: player.currentEntry?.artwork, size: 44)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(player.currentEntry?.title ?? "Not Playing")
-                    .lineLimit(1)
-                    .foregroundStyle(player.hasQueue ? .primary : .secondary)
-                if let subtitle = player.currentEntry?.subtitle {
-                    Text(subtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-            }
-        }
-    }
-
-    private var controls: some View {
-        HStack(spacing: 20) {
+        HStack(spacing: 28) {
             Button(action: player.toggleShuffle) {
                 Image(systemName: "shuffle")
                     .foregroundStyle(player.isShuffled ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
@@ -60,8 +51,8 @@ struct NowPlayingBar: View {
 
             Button(action: player.togglePlayPause) {
                 Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.title)
-                    .frame(width: 28)
+                    .font(.largeTitle)
+                    .frame(width: 40)
             }
             .help(player.isPlaying ? "Pause" : "Play")
 
@@ -76,7 +67,7 @@ struct NowPlayingBar: View {
             }
             .help(repeatHelp)
         }
-        .font(.title3)
+        .font(.title2)
         .buttonStyle(.plain)
     }
 
