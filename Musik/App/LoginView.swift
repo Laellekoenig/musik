@@ -1,18 +1,6 @@
 import MusicKit
 import SwiftUI
 
-struct ContentView: View {
-    @State private var status = MusicAuthorization.currentStatus
-
-    var body: some View {
-        if status == .authorized {
-            SearchView()
-        } else {
-            LoginView(status: $status)
-        }
-    }
-}
-
 /// MusicKit has no separate sign-in form on macOS: it uses the Apple Account
 /// the user is signed into in the Music app, and asks them to grant access.
 struct LoginView: View {
