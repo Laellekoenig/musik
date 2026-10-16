@@ -20,6 +20,16 @@ One page: the current song's artwork with playback controls (shuffle, previous, 
 
 Playback needs an active Apple Music subscription on the Apple Account that's signed in to the Music app.
 
+### Live reloading
+
+```sh
+./scripts/dev.sh
+```
+
+Builds and launches the app, then rebuilds and relaunches it whenever a file in `Musik/` changes (incremental builds take a second or two). If a build fails, the error prints and the previous build keeps running. The app's `print` output shows in the terminal. Ctrl-C quits the script and the app.
+
+For single views, the `#Preview` canvas in Xcode (⌥⌘↩) updates as you type.
+
 ## Project structure
 
 `Musik/` is a file-system-synchronized group: new `.swift` files in it are compiled automatically, no project file edits needed.
