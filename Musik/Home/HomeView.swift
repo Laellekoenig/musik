@@ -1,29 +1,34 @@
 import MusicKit
 import SwiftUI
 
-/// The app's only page: what's playing, and a song search below it. While
-/// searching, the artwork shrinks to make room for the results.
+/// The player stays in place; song search appears as a centered command panel.
 struct HomeView: View {
     @Environment(PlayerModel.self) private var player
-    @FocusState private var isSearchFocused: Bool
-    @State private var query = ""
-
-    private var isSearching: Bool {
-        !query.trimmingCharacters(in: .whitespaces).isEmpty
-    }
+    @State private var isSearchPresented = false
 
     var body: some View {
-        VStack(spacing: 28) {
-            NowPlayingView(artworkSize: isSearching ? 120 : 280)
-            SongSearchView(isFocused: $isSearchFocused, query: $query)
+        ZStack {
+            NowPlayingView()
+                .padding(28)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .allowsHitTesting(!isSearchPresented)
+                .accessibilityHidden(isSearchPresented)
+
+            if isSearchPresented {
+                Color.black.opacity(0.2)
+                    .ignoresSafeArea()
+                    .onTapGesture { isSearchPresented = false }
+                    .accessibilityHidden(true)
+
+                SongSearchView { isSearchPresented = false }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 36)
+                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
+            }
         }
-        .padding(.horizontal, 28)
-        .padding(.top, 36)
-        .padding(.bottom, 28)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .animation(.smooth, value: isSearching)
+        .animation(.easeOut(duration: 0.16), value: isSearchPresented)
         .background { ArtworkBackdrop(artwork: player.currentEntry?.artwork) }
-        .focusedSceneValue(\.focusSongSearch) { isSearchFocused = true }
+        .focusedSceneValue(\.focusSongSearch) { isSearchPresented = true }
         .alert("Something went wrong", isPresented: Binding(
             get: { player.errorMessage != nil },
             set: { if !$0 { player.errorMessage = nil } }

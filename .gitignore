@@ -3,3 +3,8 @@ build/
 DerivedData/
 xcuserdata/
 *.xcuserstate
+node_modules/
+out/
+.env.local
+*.p8
+*.tsbuildinfo

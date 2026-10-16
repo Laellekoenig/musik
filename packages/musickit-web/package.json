@@ -1,0 +1,14 @@
+{
+  "name": "@musik/musickit-web",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@musik/core": "workspace:*"
+  }
+}

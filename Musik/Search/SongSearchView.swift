@@ -1,33 +1,46 @@
 import MusicKit
 import SwiftUI
 
-/// A search field for Apple Music songs with the results below it. Driven
-/// from the keyboard: ↑/↓ pick a result, Return plays it, Esc closes.
+/// A floating search panel: ↑/↓ pick a result, Return plays it, Esc closes.
 struct SongSearchView: View {
     @Environment(PlayerModel.self) private var player
-    @FocusState.Binding var isFocused: Bool
-    @Binding var query: String
+    let onClose: () -> Void
 
+    @FocusState private var isFocused: Bool
+    @State private var query = ""
     @State private var results: [Song] = []
     @State private var highlighted: Song.ID?
     @State private var errorMessage: String?
+    @State private var isLoading = false
 
     private var term: String {
-        query.trimmingCharacters(in: .whitespaces)
+        query.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 0) {
             field
             if !term.isEmpty {
+                Divider()
                 resultsList
             }
         }
+        .frame(maxWidth: 480)
+        .background(.regularMaterial, in: .rect(cornerRadius: 16))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(.separator, lineWidth: 1)
+                .allowsHitTesting(false)
+        }
+        .shadow(color: .black.opacity(0.25), radius: 24, y: 12)
+        .accessibilityAddTraits(.isModal)
+        .onExitCommand(perform: onClose)
+        .task { isFocused = true }
         .task(id: term) { await search() }
     }
 
     private var field: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
 
@@ -37,27 +50,30 @@ struct SongSearchView: View {
                 .onSubmit(playHighlighted)
                 .onKeyPress(.downArrow) { moveHighlight(by: 1) }
                 .onKeyPress(.upArrow) { moveHighlight(by: -1) }
-                .onExitCommand(perform: close)
 
             if !query.isEmpty {
-                Button("Clear", systemImage: "xmark.circle.fill", action: close)
+                Button("Clear Search", systemImage: "xmark.circle.fill") {
+                    query = ""
+                    isFocused = true
+                }
                     .labelStyle(.iconOnly)
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
-            } else if !isFocused {
-                Text("⌘N")
-                    .foregroundStyle(.tertiary)
             }
+
+            Button(action: onClose) {
+                Text("esc")
+                    .font(.caption)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 3)
+                    .background(.quaternary, in: .rect(cornerRadius: 4))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .accessibilityLabel("Close Search")
         }
         .font(.title3)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(.regularMaterial, in: .rect(cornerRadius: 10))
-        .overlay {
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(isFocused ? AnyShapeStyle(.tint) : AnyShapeStyle(.separator), lineWidth: isFocused ? 2 : 1)
-        }
-        .frame(maxWidth: 480)
+        .padding(16)
     }
 
     private var resultsList: some View {
@@ -82,8 +98,7 @@ struct SongSearchView: View {
                 .padding(6)
             }
             .overlay { overlay }
-            .background(.regularMaterial, in: .rect(cornerRadius: 10))
-            .frame(maxWidth: 480)
+            .frame(height: results.isEmpty ? 180 : min(CGFloat(results.count) * 56 + 12, 336))
             .onChange(of: highlighted) {
                 if let highlighted { proxy.scrollTo(highlighted) }
             }
@@ -94,18 +109,20 @@ struct SongSearchView: View {
     private var overlay: some View {
         if let errorMessage {
             ContentUnavailableView("Search Failed", systemImage: "exclamationmark.triangle", description: Text(errorMessage))
-        } else if results.isEmpty {
+        } else if isLoading {
             ProgressView()
+        } else if results.isEmpty {
+            ContentUnavailableView.search(text: term)
         }
     }
 
     private func search() async {
         let term = term
-        guard !term.isEmpty else {
-            results = []
-            errorMessage = nil
-            return
-        }
+        results = []
+        highlighted = nil
+        errorMessage = nil
+        isLoading = !term.isEmpty
+        guard !term.isEmpty else { return }
 
         // Debounce: a new keystroke cancels this task before the request fires.
         try? await Task.sleep(for: .milliseconds(250))
@@ -118,10 +135,11 @@ struct SongSearchView: View {
             guard !Task.isCancelled else { return }
             results = Array(response.songs)
             highlighted = results.first?.id
-            errorMessage = results.isEmpty ? "No songs match “\(term)”." : nil
+            isLoading = false
         } catch {
             guard !Task.isCancelled else { return }
             errorMessage = error.localizedDescription
+            isLoading = false
         }
     }
 
@@ -142,11 +160,6 @@ struct SongSearchView: View {
     /// search to bring the player back into view.
     private func play(_ song: Song) {
         player.play(results, startingAt: song)
-        close()
-    }
-
-    private func close() {
-        query = ""
-        isFocused = false
+        onClose()
     }
 }

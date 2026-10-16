@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "types": ["vite/client"],
+    "resolveJsonModule": true
+  },
+  "include": ["src/renderer/src", "src/shared"]
+}

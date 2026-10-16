@@ -4,42 +4,55 @@
 
 Created in [T3 Code](https://t3.codes).
 
-A native macOS Apple Music client built with SwiftUI and MusicKit.
+An Apple Music client. The desktop app is built with Electron, React and MusicKit JS. Everything except the views is platform-free, so a mobile app can reuse it.
 
 ## Features
 
-One page: the current song's artwork with playback controls (shuffle, previous, play/pause, next, repeat, scrubber), and a song search below it.
+By default, only the current song's artwork and playback controls are shown (shuffle, previous, play/pause, next, repeat, scrubber). Song search opens in a centered floating panel over the player.
 
-- **⌘N** focuses the search; **↑/↓** pick a result, **Return** plays it (the results become the queue), **Esc** closes the search.
-- The Controls menu has play/pause (⌘P), next/previous (⌘→/⌘←), shuffle and repeat.
+- **⌘Space** opens and focuses search; **↑/↓** pick a result, **Return** plays it (the results become the queue), **Esc** or a click outside the panel closes it. Search is also available from **File › Search Songs**.
+- The Controls menu has play/pause (⌘P), next/previous (⌘→/⌘←), shuffle (⌥⌘S) and repeat (⌥⌘R).
+- On macOS, closing the window keeps the music playing; the Dock icon brings it back.
 
 ## Setup
 
-1. In the [Apple Developer portal](https://developer.apple.com/account/resources/identifiers/list), open the App ID `zip.barth.musik` (register it if missing), go to **App Services**, and enable **MusicKit**. MusicKit can't issue a developer token until you do.
-2. Open `Musik.xcodeproj` in Xcode and run (⌘R).
+MusicKit JS needs a developer token. The app signs one at launch with a MusicKit key from your Apple Developer account:
 
-Playback needs an active Apple Music subscription on the Apple Account that's signed in to the Music app.
+1. In [Identifiers](https://developer.apple.com/account/resources/identifiers/list), register a **Media ID** (e.g. `media.zip.barth.musik`) with MusicKit enabled.
+2. In [Keys](https://developer.apple.com/account/resources/authkeys/list), create a key with **Media Services (MusicKit, ShazamKit, Apple Music Feed)** for that Media ID. Download the `.p8` file (you only get one chance) and note the **Key ID**. Your **Team ID** is in the top right of the portal.
+3. Copy `apps/desktop/.env.example` to `apps/desktop/.env.local` and fill it in. Keep the `.p8` outside the repo.
+4. `bun install`, then `bun run dev`.
 
-### Live reloading
+Click **Continue with Apple Music** and sign in with an Apple Account that has an Apple Music subscription. Without a subscription, MusicKit plays 30-second previews.
+
+## Development
 
 ```sh
-./scripts/dev.sh
+bun run dev        # the Electron app; the page hot-reloads, and main/preload changes restart it
+bun test           # unit tests
+bun run typecheck
 ```
 
-Builds and launches the app, then rebuilds and relaunches it whenever a file in `Musik/` changes (incremental builds take a second or two). If a build fails, the error prints and the previous build keeps running. The app's `print` output shows in the terminal. Ctrl-C quits the script and the app.
-
-For single views, the `#Preview` canvas in Xcode (⌥⌘↩) updates as you type.
+The menu's **View** item (in development only) has Reload and Developer Tools.
 
 ## Project structure
 
-`Musik/` is a file-system-synchronized group: new `.swift` files in it are compiled automatically, no project file edits needed.
+A bun workspace. Workspace packages are consumed as TypeScript source, with no build step.
 
 | Folder | What goes there |
 | --- | --- |
-| `App/` | App entry point, authorization gate and menu commands. |
-| `Home/` | `HomeView`, the app's page. |
-| `Player/` | `PlayerModel`, the only code that talks to `ApplicationMusicPlayer`, plus the now playing view and the Controls menu. |
-| `Search/` | The song search field and results. |
-| `Views/Components/` | Small reusable views: artwork, track rows. |
+| `packages/core` | Platform-free TypeScript: the `Song` and state types, the `MusicEngine` interface, `Player` (Music.app behavior, like previous restarting a song that's more than 3 s in, and which errors to show), and React hooks (`usePlayerState`, `usePlaybackTime`, `useSongSearch`) that work in React DOM and React Native alike. |
+| `packages/musickit-web` | The `MusicEngine` for browsers and Electron, on MusicKit JS v3 (loaded from Apple's CDN, which Apple requires). |
+| `apps/desktop/src/main` | Electron main process: the window, the app menu, Widevine setup, signing the developer token. |
+| `apps/desktop/src/preload` | The `window.musik` bridge between the page and the main process. |
+| `apps/desktop/src/renderer` | The React views. |
 
-Views start playback only through `PlayerModel`.
+Views go through `Player` only, and only an engine talks to MusicKit.
+
+**A mobile app** would be `apps/mobile` (Expo / React Native) with its own views, plus a `MusicEngine` on native MusicKit: on iOS an Expo module around `ApplicationMusicPlayer`, on Android Apple's MusicKit for Android SDK. `@musik/core` is reused as is.
+
+**DRM:** in Chromium, Apple Music streams are Widevine-encrypted, and stock Electron has no Widevine. So the `electron` dependency is [castLabs' Electron for Content Security](https://github.com/castlabs/electron-releases), which downloads the Widevine CDM on first launch. Its builds are VMP-signed for development. A distributed build needs production VMP signing through castLabs' free EVS service, and must load the page from an http(s) origin rather than `file://` for MusicKit sign-in to work.
+
+## Native macOS app
+
+The earlier SwiftUI version is still in `Musik/` and `Musik.xcodeproj`. To run it, enable MusicKit for the App ID `zip.barth.musik` in the [Apple Developer portal](https://developer.apple.com/account/resources/identifiers/list), then open the project in Xcode, or run `./scripts/dev.sh` to rebuild and relaunch it on every change.
