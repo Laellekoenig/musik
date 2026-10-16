@@ -13,24 +13,14 @@ export function HomeView() {
   useAppMenu(() => setSearchOpen(true));
 
   return (
-    <div className="home">
+    <div className="relative grid h-full place-items-center p-7">
       <ArtworkBackdrop artwork={artwork} />
 
-      <main className="home-player" inert={isSearchOpen}>
+      <main className="relative w-full">
         <NowPlaying />
       </main>
 
-      {isSearchOpen && (
-        <div
-          className="search-overlay"
-          onPointerDown={(event) => {
-            if (event.target === event.currentTarget) setSearchOpen(false);
-          }}
-        >
-          <SongSearch onClose={() => setSearchOpen(false)} />
-        </div>
-      )}
-
+      <SongSearch open={isSearchOpen} onOpenChange={setSearchOpen} />
       <ErrorAlert />
     </div>
   );
@@ -42,8 +32,13 @@ function ArtworkBackdrop({ artwork }: { artwork: Artwork | undefined }) {
   const src = artworkUrl(artwork, 300);
 
   return (
-    <div className="backdrop" aria-hidden>
-      <img key={src} src={src} alt="" />
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      <img
+        key={src}
+        className="absolute -inset-[10%] size-[120%] max-w-none object-cover opacity-45 blur-[60px] duration-500 animate-in fade-in"
+        src={src}
+        alt=""
+      />
     </div>
   );
 }

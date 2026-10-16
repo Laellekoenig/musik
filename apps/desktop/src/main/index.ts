@@ -34,7 +34,8 @@ function createWindow(): BrowserWindow {
     minWidth: 380,
     minHeight: 600,
     titleBarStyle: "hidden",
-    backgroundColor: nativeTheme.shouldUseDarkColors ? "#1e1e1e" : "#ececec",
+    // The theme's --background, so the window doesn't flash before the page paints.
+    backgroundColor: nativeTheme.shouldUseDarkColors ? "#0a0a0a" : "#ffffff",
     show: false,
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),

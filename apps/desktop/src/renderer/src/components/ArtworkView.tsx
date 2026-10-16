@@ -1,5 +1,6 @@
 import { artworkUrl, type Artwork } from "@musik/core";
 import { Music } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /** Square artwork with rounded corners, falling back to a placeholder. */
 export function ArtworkView(props: { artwork: Artwork | undefined; size: number; radius?: number; className?: string }) {
@@ -7,7 +8,7 @@ export function ArtworkView(props: { artwork: Artwork | undefined; size: number;
 
   return (
     <div
-      className={props.className ? `artwork ${props.className}` : "artwork"}
+      className={cn("grid flex-none place-items-center overflow-hidden bg-muted text-muted-foreground", props.className)}
       style={{
         width: size,
         height: size,
@@ -16,9 +17,14 @@ export function ArtworkView(props: { artwork: Artwork | undefined; size: number;
       }}
     >
       {artwork ? (
-        <img src={artworkUrl(artwork, size * Math.ceil(window.devicePixelRatio))} alt="" draggable={false} />
+        <img
+          className="block size-full object-cover"
+          src={artworkUrl(artwork, size * Math.ceil(window.devicePixelRatio))}
+          alt=""
+          draggable={false}
+        />
       ) : (
-        <Music size={size * 0.4} />
+        <Music style={{ width: size * 0.4, height: size * 0.4 }} />
       )}
     </div>
   );

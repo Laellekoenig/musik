@@ -10,7 +10,7 @@ An Apple Music client. The desktop app is built with Electron, React and MusicKi
 
 By default, only the current song's artwork and playback controls are shown (shuffle, previous, play/pause, next, repeat, scrubber). Song search opens in a centered floating panel over the player.
 
-- **⌘Space** opens and focuses search; **↑/↓** pick a result, **Return** plays it (the results become the queue), **Esc** or a click outside the panel closes it. Search is also available from **File › Search Songs**.
+- **⌘F** opens and focuses search; **↑/↓** pick a result, **Return** plays it (the results become the queue), **Esc** or a click outside the panel closes it. Search is also available from **File › Search Songs**.
 - The Controls menu has play/pause (⌘P), next/previous (⌘→/⌘←), shuffle (⌥⌘S) and repeat (⌥⌘R).
 - On macOS, closing the window keeps the music playing; the Dock icon brings it back.
 
@@ -45,7 +45,7 @@ A bun workspace. Workspace packages are consumed as TypeScript source, with no b
 | `packages/musickit-web` | The `MusicEngine` for browsers and Electron, on MusicKit JS v3 (loaded from Apple's CDN, which Apple requires). |
 | `apps/desktop/src/main` | Electron main process: the window, the app menu, Widevine setup, signing the developer token. |
 | `apps/desktop/src/preload` | The `window.musik` bridge between the page and the main process. |
-| `apps/desktop/src/renderer` | The React views. |
+| `apps/desktop/src/renderer` | The React views, built from [shadcn/ui](https://ui.shadcn.com) components (`src/components/ui`, preset `bbVJxce` on Base UI) and Tailwind CSS. |
 
 Views go through `Player` only, and only an engine talks to MusicKit.
 

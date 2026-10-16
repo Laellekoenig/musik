@@ -18,7 +18,7 @@ export function buildMenu(state: MenuState, send: (command: Command) => void): M
         // In place of New Window: the app is one window.
         {
           label: "Search Songs",
-          accelerator: "CommandOrControl+Space",
+          accelerator: "CommandOrControl+F",
           enabled: state.canSearch,
           click: () => send("search"),
         },

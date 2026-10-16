@@ -9,7 +9,7 @@ export function App() {
   return (
     <>
       {/* The window has no title bar; this strip lets you drag it. */}
-      <div className="titlebar" />
+      <div className="fixed inset-x-0 top-0 z-10 h-7 [-webkit-app-region:drag]" />
       {isAuthorized ? <HomeView /> : <LoginView />}
     </>
   );

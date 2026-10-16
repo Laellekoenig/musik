@@ -1,5 +1,7 @@
 import { usePlayer, usePlayerState } from "@musik/core/react";
 import { Music } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 
 /** MusicKit shows Apple's sign-in page in a popup and asks the user to grant access. */
 export function LoginView() {
@@ -9,25 +11,33 @@ export function LoginView() {
   const errorMessage = usePlayerState((state) => state.errorMessage);
 
   return (
-    <main className="login">
-      <Music className="login-icon" size={56} strokeWidth={2.25} />
-      <h1 className="login-title">Musik</h1>
+    <main className="h-full">
+      <Empty className="h-full">
+        <EmptyHeader>
+          <EmptyMedia>
+            <Music className="size-14 text-primary" strokeWidth={2.25} />
+          </EmptyMedia>
+          <EmptyTitle className="text-2xl font-semibold">
+            <h1>Musik</h1>
+          </EmptyTitle>
+          <EmptyDescription className="select-text">
+            {setupError ?? "Connect your Apple Music account to search and play songs."}
+          </EmptyDescription>
+        </EmptyHeader>
 
-      {setupError ? (
-        <p className="login-message">{setupError}</p>
-      ) : (
-        <>
-          <p className="login-message">Connect your Apple Music account to search and play songs.</p>
-          <button className="button-prominent" disabled={auth === "pending"} onClick={player.authorize}>
-            Continue with Apple Music
-          </button>
-          {errorMessage && (
-            <p className="login-error" role="alert">
-              {errorMessage}
-            </p>
-          )}
-        </>
-      )}
+        {!setupError && (
+          <EmptyContent>
+            <Button size="lg" disabled={auth === "pending"} onClick={player.authorize}>
+              Continue with Apple Music
+            </Button>
+            {errorMessage && (
+              <p className="text-destructive select-text" role="alert">
+                {errorMessage}
+              </p>
+            )}
+          </EmptyContent>
+        )}
+      </Empty>
     </main>
   );
 }

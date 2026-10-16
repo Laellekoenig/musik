@@ -13,6 +13,12 @@ const engine = createMusicKitEngine({
 });
 const player = new Player(engine);
 
+// shadcn's dark theme hangs off a `dark` class; follow the system appearance.
+const darkMode = window.matchMedia("(prefers-color-scheme: dark)");
+const applyAppearance = () => document.documentElement.classList.toggle("dark", darkMode.matches);
+applyAppearance();
+darkMode.addEventListener("change", applyAppearance);
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <PlayerProvider player={player}>
